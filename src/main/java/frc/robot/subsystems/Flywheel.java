@@ -4,12 +4,9 @@
 
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
-
 import com.ctre.phoenix6.controls.VelocityVoltage;
 
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FlywheelConstants;
 import frc.robot.Constants.RobotMap.CAN;
@@ -55,7 +52,7 @@ public class Flywheel extends SubsystemBase {
         flywheelRight.setControl(flywheelPID.withVelocity(targetRPS).withEnableFOC(false).withSlot(0));
     }
 
-    public void setPower(double power) {
+    public void setRawPower(double power) {
         flywheelLeft.set(power);
         flywheelRight.set(power);
     }
@@ -69,6 +66,7 @@ public class Flywheel extends SubsystemBase {
     }
 
     public double getTargetRPM() {
+        // something with target rpms is wrong (i think) jusnoor fix please
         return targetRPS / 60d;
     }
 
@@ -78,6 +76,10 @@ public class Flywheel extends SubsystemBase {
 
     public double getRightRPM() {
         return (flywheelRight.getVelocity().getValueAsDouble() * 60d);
+    }
+
+    public double getAverageRPMs() {
+        return (getLeftRPM() + getRightRPM()) / 2d;
     }
 
     @Override

@@ -4,9 +4,8 @@
 
 package frc.robot;
 
-// import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -19,12 +18,14 @@ import frc.thunder.LightningContainer;
 import frc.thunder.filter.XboxControllerFilter;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.command.Intake;
-import frc.robot.command.SetFlywheelsRPM;
 
 public class RobotContainer extends LightningContainer {
 
     private XboxControllerFilter driver;
     private XboxControllerFilter copilot;
+
+    public static final boolean DRIVETRAIN_DISABLED = true;
+    public static final boolean VISION_DISABLED = true;
 
     private Swerve drivetrain;
     private PhotonVision vision;
@@ -33,58 +34,60 @@ public class RobotContainer extends LightningContainer {
     private Flywheel flywheel;
     private Telemetry logger;
 
-    // private SwerveRequest.FieldCentric driveFieldCentric;
-    // private SwerveRequest.RobotCentric driveRobotCentric;
+    private SwerveRequest.FieldCentric driveFieldCentric;
+    private SwerveRequest.RobotCentric driveRobotCentric;
 
     @Override
     protected void initializeSubsystems() {
         this.driver = new XboxControllerFilter(0, 0.1, -1, 1, XboxControllerFilter.filterMode.SQUARED);
         this.copilot = new XboxControllerFilter(1, 0.1, -1, 1, XboxControllerFilter.filterMode.SQUARED);
 
-        this.drivetrain = getDrivetrain();
-        // this.vision = new PhotonVision();
+        if (!DRIVETRAIN_DISABLED) {
+            this.drivetrain = getDrivetrain();
+            this.logger = new Telemetry(drivetrain.getMaxSpeed());
+
+            this.driveFieldCentric = new SwerveRequest.FieldCentric();
+            this.driveRobotCentric = new SwerveRequest.RobotCentric();
+        }
+        if (!VISION_DISABLED) {
+            this.vision = new PhotonVision();
+        }
         this.pivot = new Pivot();
         this.indexer = new Indexer();
-        this.flywheel = new Flywheel();        
-
-        // this.logger = new Telemetry(drivetrain.getMaxSpeed());
-
-        // this.driveFieldCentric = new SwerveRequest.FieldCentric();
-        // this.driveRobotCentric = new SwerveRequest.RobotCentric();
+        this.flywheel = new Flywheel();
     }
 
     @Override
     protected void configureButtonBindings() {
+        // old old code probably do not use
         // new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
         // drivetrain.applyPercentRequestRobot(
         // () -> -driver.getLeftY(),
         // () -> -driver.getLeftX(),
         // () -> -driver.getRightX()));
 
-        // new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
-        //         drivetrain.applyRequest(
-        //                 () -> driveRobotCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
-        //                         .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
-        //                         .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
+        if (!DRIVETRAIN_DISABLED) {
+            new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
+                    drivetrain.applyRequest(
+                            () -> driveRobotCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
+                                    .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
+                                    .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
+    
+            new Trigger(() -> driver.getRightTriggerAxis() > 0.25d)
+                    .onTrue(drivetrain.enableSlowMode())
+                    .onFalse(drivetrain.disableSlowMode());
+    
+            new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
+    
+            new Trigger(driver::getXButton).onTrue(drivetrain.setBrake());
+        }
 
-        // new Trigger(() -> driver.getRightTriggerAxis() > 0.25d)
-        //         .onTrue(drivetrain.enableSlowMode())
-        //         .onFalse(drivetrain.disableSlowMode());
-
-        // new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
-
-        // new Trigger(driver::getXButton).onTrue(drivetrain.setBrake());
-
-        new Trigger(copilot::getLeftBumper).whileTrue(new Intake(indexer, true));
-        new Trigger(copilot::getRightBumper).whileTrue(new Intake(indexer, false));
+        // Intake Controls
+        new Trigger(copilot::getLeftBumper).whileTrue(new Intake(indexer, flywheel, true));
+        new Trigger(copilot::getRightBumper).whileTrue(new Intake(indexer, flywheel, false));
 
         // new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
-        new Trigger(copilot::getAButton).whileTrue(new RunCommand(() -> flywheel.setPower(1d), flywheel));
-
-        // if (Utils.isSimulation()) {
-        // drivetrain.seedFieldRelative(new Pose2d(new Translation2d(),
-        // Rotation2d.fromDegrees(90)));
-        // }
+        new Trigger(copilot::getAButton).whileTrue(new RunCommand(() -> flywheel.setRawPower(1d), flywheel));
     }
 
     @Override
@@ -94,19 +97,24 @@ public class RobotContainer extends LightningContainer {
         //                 () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
         //                 () -> -(driver.getRightX() * drivetrain.getRotMult())));
     
-        // drivetrain.setDefaultCommand(
-        //     drivetrain.applyRequest(
-        //         () -> driveFieldCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
-        //             .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
-        //             .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
+        if (!DRIVETRAIN_DISABLED) {
+            drivetrain.setDefaultCommand(
+                drivetrain.applyRequest(
+                    () -> driveFieldCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
+                        .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
+                        .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
+    
+            if (!VISION_DISABLED) {
+                vision.setDefaultCommand(vision.updateOdometry(drivetrain));
+            }
 
-        // vision.setDefaultCommand(vision.updateOdometry(drivetrain));
+            drivetrain.registerTelemetry(logger::telemeterize);
+        }
 
         // flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), flywheel));
 
         pivot.setDefaultCommand(new RunCommand(() -> pivot.set(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
 
-        // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
     @Override
@@ -139,6 +147,6 @@ public class RobotContainer extends LightningContainer {
     }
 
     public Swerve getDrivetrain() {
-        return null;//drivetrain == null ? TunerConstants.DriveTrain : drivetrain;
+        return drivetrain == null ? TunerConstants.DriveTrain : drivetrain;
     }
 }

@@ -5,22 +5,18 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IndexerConstants;
-import frc.robot.Constants.RobotMap;
 import frc.robot.Constants.RobotMap.CAN;
 import frc.thunder.hardware.ThunderBird;
 import frc.thunder.shuffleboard.LightningShuffleboard;
 
 public class Indexer extends SubsystemBase {
 
-    // private TalonFX indexerMotor;
     private ThunderBird indexerMotor;
 
     public Indexer() {
-        // indexerMotor = new TalonFX(RobotMap.CAN.INDEXER_ID);
         indexerMotor = new ThunderBird(CAN.INDEXER_ID, CAN.CANBUS_FD, IndexerConstants.INDEXER_INVERT,
                 IndexerConstants.MOTOR_STATOR_CURRENT_LIMIT, false);
 
@@ -36,9 +32,17 @@ public class Indexer extends SubsystemBase {
         setPower(0d);
     }
 
+    public boolean getStalling() {
+        // TODO: implement
+        return false;// indexerMotor.getStatorCurrent().getValueAsDouble() > 0.1;
+    }
+
     private void initLogging() {
-        LightningShuffleboard.setDoubleSupplier("Indexer", "Power",
+        LightningShuffleboard.setDoubleSupplier("Indexer", "DutyCycleOut",
                 () -> indexerMotor.getDutyCycle().getValueAsDouble());
+
+        LightningShuffleboard.setDoubleSupplier("Indexer", "Stator Current",
+                () -> indexerMotor.getStatorCurrent().getValueAsDouble());
     }
 
     @Override

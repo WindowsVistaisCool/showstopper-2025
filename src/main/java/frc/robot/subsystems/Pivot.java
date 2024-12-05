@@ -76,14 +76,13 @@ public class Pivot extends SubsystemBase {
 
     private void applyAngle() {
         leftMotor.setControl(positionPID.withPosition(targetAngle).withSlot(0));
-        // rightMotor.setControl(new Follower(leftMotor.getDeviceID(), true));
-        // rightMotor.setControl(positionPID.withPosition(targetAngle).withSlot(0));
     }
 
     public double getAngle() {
+        // this is also wrong!!
         return angleEncoder.getPosition().getValueAsDouble() / PivotConstants.ROTOR_TO_ENCODER_RATIO;
     }
-    
+
     public double getTargetAngle() {
         return targetAngle;
     }

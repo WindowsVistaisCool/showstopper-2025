@@ -18,7 +18,10 @@ public class Robot extends LightningRobot {
         
         RobotContainer robotContainer = (RobotContainer) getContainer();
 
-        // robotContainer.getDrivetrain().brake();
+        if (!RobotContainer.DRIVETRAIN_DISABLED) {
+            // realistically this doesn't work because we aren't running 10ms cycles
+            robotContainer.getDrivetrain().brake();
+        }
     }
 
     @Override
