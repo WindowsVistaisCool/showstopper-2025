@@ -18,6 +18,7 @@ import frc.thunder.LightningContainer;
 import frc.thunder.filter.XboxControllerFilter;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.command.Intake;
+import frc.robot.command.PivotRequest;
 
 public class RobotContainer extends LightningContainer {
 
@@ -113,7 +114,12 @@ public class RobotContainer extends LightningContainer {
 
         // flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), flywheel));
 
-        pivot.setDefaultCommand(new RunCommand(() -> pivot.set(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
+        // raw dutycycle movement
+        pivot.setDefaultCommand(new RunCommand(() -> pivot.setRawPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
+
+        // angle set based on right trigger (please fix pivot angle math before using!)
+        double ANGLE_MULT = 10; // range: 0-10 
+        // pivot.setDefaultCommand(new PivotRequest(pivot, () -> (copilot.getRightTriggerAxis() * ANGLE_MULT)));
 
     }
 

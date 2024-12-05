@@ -87,7 +87,7 @@ public class Pivot extends SubsystemBase {
         return targetAngle;
     }
 
-    public void set(double power) {
+    public void setRawPower(double power) {
         power *= 0.2;
         leftMotor.set(power);
     }
