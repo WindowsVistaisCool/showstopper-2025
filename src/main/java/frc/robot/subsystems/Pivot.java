@@ -80,7 +80,7 @@ public class Pivot extends SubsystemBase {
 
     public double getAngle() {
         // this is also wrong!!
-        return angleEncoder.getPosition().getValueAsDouble() / PivotConstants.ROTOR_TO_ENCODER_RATIO;
+        return angleEncoder.getPosition().getValueAsDouble() / 409.6;//PivotConstants.ROTOR_TO_ENCODER_RATIO;
     }
 
     public double getTargetAngle() {
@@ -88,13 +88,13 @@ public class Pivot extends SubsystemBase {
     }
 
     public void setRawPower(double power) {
-        power *= 0.2;
+        power *= 0.4;
         leftMotor.set(power);
     }
 
     @Override
     public void periodic() {
-        targetAngle = LightningShuffleboard.getDouble("Pivot", "Angle", targetAngle);
+        targetAngle = LightningShuffleboard.getDouble("Pivot", "INPUT target angle", targetAngle);
 
         // applyAngle();
     }

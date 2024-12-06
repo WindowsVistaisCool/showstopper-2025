@@ -41,6 +41,6 @@ public class Intake extends Command {
     @Override
     public boolean isFinished() {
         // stop if the flywheel is not running and our indexer is stalling
-        return flywheel.getAverageRPMs() <= 1000d && indexer.getStalling();
+        return false;//flywheel.getAverageRPMs() <= 1000d && indexer.getStalling();
     }
 }

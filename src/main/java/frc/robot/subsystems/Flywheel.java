@@ -66,8 +66,7 @@ public class Flywheel extends SubsystemBase {
     }
 
     public double getTargetRPM() {
-        // something with target rpms is wrong (i think) jusnoor fix please
-        return targetRPS / 60d;
+        return targetRPS * 60d;
     }
 
     public double getLeftRPM() {

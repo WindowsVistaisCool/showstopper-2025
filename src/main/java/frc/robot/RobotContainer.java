@@ -19,13 +19,14 @@ import frc.thunder.filter.XboxControllerFilter;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.command.Intake;
 import frc.robot.command.PivotRequest;
+import frc.robot.command.SetFlywheelsRPM;
 
 public class RobotContainer extends LightningContainer {
 
     private XboxControllerFilter driver;
     private XboxControllerFilter copilot;
 
-    public static final boolean DRIVETRAIN_DISABLED = true;
+    public static final boolean DRIVETRAIN_DISABLED = false;
     public static final boolean VISION_DISABLED = true;
 
     private Swerve drivetrain;
@@ -78,7 +79,7 @@ public class RobotContainer extends LightningContainer {
                     .onTrue(drivetrain.enableSlowMode())
                     .onFalse(drivetrain.disableSlowMode());
     
-            new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
+            // new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
     
             new Trigger(driver::getXButton).onTrue(drivetrain.setBrake());
         }
@@ -87,8 +88,8 @@ public class RobotContainer extends LightningContainer {
         new Trigger(copilot::getLeftBumper).whileTrue(new Intake(indexer, flywheel, true));
         new Trigger(copilot::getRightBumper).whileTrue(new Intake(indexer, flywheel, false));
 
-        // new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
-        new Trigger(copilot::getAButton).whileTrue(new RunCommand(() -> flywheel.setRawPower(1d), flywheel));
+        new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
+        // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() -> flywheel.setRawPower(1d), flywheel));
     }
 
     @Override
