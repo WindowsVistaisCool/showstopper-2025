@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -41,12 +42,15 @@ public class Pivot extends SubsystemBase {
         rightMotor = new ThunderBird(CAN.PIVOT_RIGHT_ID, CAN.CANBUS_FD, PivotConstants.MOTOR_RIGHT_INVERT,
                 PivotConstants.MOTOR_STATOR_CURRENT_LIMIT, PivotConstants.MOTOR_BRAKE_MODE);
 
-        leftMotor.configPIDF(0, PivotConstants.MOTOR_KP, PivotConstants.MOTOR_KI,
-                PivotConstants.MOTOR_KD, PivotConstants.MOTOR_KS, PivotConstants.MOTOR_KV);
-
-        rightMotor.configPIDF(0, PivotConstants.MOTOR_KP, PivotConstants.MOTOR_KI,
-                PivotConstants.MOTOR_KD, PivotConstants.MOTOR_KS, PivotConstants.MOTOR_KV);
         TalonFXConfiguration motorConfig = leftMotor.getConfig();
+        motorConfig.Slot0.kP = PivotConstants.MOTOR_KP;
+        motorConfig.Slot0.kI = PivotConstants.MOTOR_KI;
+        motorConfig.Slot0.kD = PivotConstants.MOTOR_KD;
+        motorConfig.Slot0.kS = PivotConstants.MOTOR_KS;
+        motorConfig.Slot0.kV = PivotConstants.MOTOR_KV;
+        motorConfig.Slot0.kA = PivotConstants.MOTOR_KA;
+        motorConfig.Slot0.kG = PivotConstants.MOTOR_KG;
+        motorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         motorConfig.Feedback.FeedbackRemoteSensorID = angleEncoder.getDeviceID();
         motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;

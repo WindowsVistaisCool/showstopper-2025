@@ -44,7 +44,8 @@ public class Flywheel extends SubsystemBase {
     }
 
     public void stop() {
-        setRPM(0d);
+        flywheelLeft.stopMotor();
+        flywheelRight.stopMotor();
     }
 
     public void applyPower() {
