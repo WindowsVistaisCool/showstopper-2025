@@ -61,26 +61,20 @@ public class RobotContainer extends LightningContainer {
 
     @Override
     protected void configureButtonBindings() {
-        // old old code probably do not use
-        // new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
-        // drivetrain.applyPercentRequestRobot(
-        // () -> -driver.getLeftY(),
-        // () -> -driver.getLeftX(),
-        // () -> -driver.getRightX()));
-
         if (!DRIVETRAIN_DISABLED) {
-            new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(
-                    drivetrain.applyRequest(
-                            () -> driveRobotCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
-                                    .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
-                                    .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
-    
+            new Trigger(() -> driver.getLeftTriggerAxis() > 0.25d).whileTrue(drivetrain.applyRobotWithLimits(
+                    driveRobotCentric,
+                    () -> -driver.getLeftX(),
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getRightX()));
+
             new Trigger(() -> driver.getRightTriggerAxis() > 0.25d)
                     .onTrue(drivetrain.enableSlowMode())
                     .onFalse(drivetrain.disableSlowMode());
-    
-            // new Trigger(() -> driver.getStartButton() && driver.getBackButton()).onTrue(drivetrain.resetForward());
-    
+
+            // new Trigger(() -> driver.getStartButton() &&
+            // driver.getBackButton()).onTrue(drivetrain.resetForward());
+
             new Trigger(driver::getXButton).onTrue(drivetrain.setBrake());
         }
 
@@ -89,23 +83,25 @@ public class RobotContainer extends LightningContainer {
         new Trigger(copilot::getRightBumper).whileTrue(new Intake(indexer, flywheel, false));
 
         new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
-        // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() -> flywheel.setRawPower(1d), flywheel));
+        // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() ->
+        // flywheel.setRawPower(1d), flywheel));
     }
 
     @Override
     protected void configureDefaultCommands() {
         // drivetrain.setDefaultCommand(
-        //         drivetrain.applyPercentRequestField(() -> -(driver.getLeftY() * drivetrain.getSpeedMult()),
-        //                 () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
-        //                 () -> -(driver.getRightX() * drivetrain.getRotMult())));
-    
+        // drivetrain.applyPercentRequestField(() -> -(driver.getLeftY() *
+        // drivetrain.getSpeedMult()),
+        // () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
+        // () -> -(driver.getRightX() * drivetrain.getRotMult())));
+
         if (!DRIVETRAIN_DISABLED) {
-            drivetrain.setDefaultCommand(
-                drivetrain.applyRequest(
-                    () -> driveFieldCentric.withRotationalRate(-driver.getRightX() * drivetrain.getMaxAngularRate())
-                        .withVelocityX(-driver.getLeftY() * drivetrain.getMaxSpeed())
-                        .withVelocityY(-driver.getLeftX() * drivetrain.getMaxSpeed())));
-    
+            drivetrain.setDefaultCommand(drivetrain.applyFieldWithLimits(
+                    driveFieldCentric,
+                    () -> -driver.getLeftX(),
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getRightX()));
+
             if (!VISION_DISABLED) {
                 vision.setDefaultCommand(vision.updateOdometry(drivetrain));
             }
@@ -113,14 +109,18 @@ public class RobotContainer extends LightningContainer {
             drivetrain.registerTelemetry(logger::telemeterize);
         }
 
-        // flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), flywheel));
+        // flywheel.setDefaultCommand(new RunCommand(() ->
+        // flywheel.setPower(copilot.getRightTriggerAxis() -
+        // copilot.getLeftTriggerAxis()), flywheel));
 
         // raw dutycycle movement
-        pivot.setDefaultCommand(new RunCommand(() -> pivot.setRawPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
+        pivot.setDefaultCommand(new RunCommand(
+                () -> pivot.setRawPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
 
         // angle set based on right trigger (please fix pivot angle math before using!)
-        double ANGLE_MULT = 10; // range: 0-10 
-        // pivot.setDefaultCommand(new PivotRequest(pivot, () -> (copilot.getRightTriggerAxis() * ANGLE_MULT)));
+        double ANGLE_MULT = 10; // range: 0-10
+        // pivot.setDefaultCommand(new PivotRequest(pivot, () ->
+        // (copilot.getRightTriggerAxis() * ANGLE_MULT)));
 
     }
 

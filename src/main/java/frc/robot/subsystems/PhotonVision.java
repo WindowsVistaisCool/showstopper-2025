@@ -40,7 +40,8 @@ public class PhotonVision extends SubsystemBase {
 
         AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
 
-        poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new Transform3d());
+        poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+                new Transform3d());
     }
 
     public void initLogging() {
@@ -66,49 +67,45 @@ public class PhotonVision extends SubsystemBase {
     public Transform3d getTransformBestTarget() {
         return result.getBestTarget().getBestCameraToTarget();
     }
-    
+
     public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
         poseEstimator.setReferencePose(prevEstimatedRobotPose);
         return poseEstimator.update(result);
     }
 
     public void setEstimatedPose(EstimatedRobotPose pose) {
-        estimatedRobotPose = new Pose4d(pose.estimatedPose.getTranslation(), pose.estimatedPose.getRotation(), pose.timestampSeconds - lastPoseTime);
+        estimatedRobotPose = new Pose4d(pose.estimatedPose.getTranslation(), pose.estimatedPose.getRotation(),
+                pose.timestampSeconds - lastPoseTime);
 
         lastPoseTime = pose.timestampSeconds;
     }
 
-
     public Command updateOdometry(Swerve swerve) {
         return run(() -> {
             swerve.applyVisionPose(estimatedRobotPose);
-        });
+        }).ignoringDisable(true);
     }
 
     @Override
     public void periodic() {
-        
         try {
             result = camera.getLatestResult();
-
+            LightningShuffleboard.setBool("Vision", "HasResult", true);
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("no camera data recieved");
+            System.out.println("[VISION] Failed to gather camera result");
+            LightningShuffleboard.setBool("Vision", "HasResult", false);
         }
-
 
         if (result != null && poseEstimator != null) {
-            
             poseEstimator.update(result).ifPresent((m_estimatedRobotPose) -> setEstimatedPose(m_estimatedRobotPose));
 
-
             field.setRobotPose(estimatedRobotPose.toPose2d());
-            
-            LightningShuffleboard.set("Vision", "pose", field);
+
+            LightningShuffleboard.set("Vision", "Field", field);
 
         } else {
-            System.out.println("the other no camera data recieved");
-
+            System.out.println("[VISION] Pose Estimator Failed to update");
         }
-        
+
     }
 }
