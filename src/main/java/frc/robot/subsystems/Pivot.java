@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PivotConstants;
+import frc.robot.Constants.PivotConstants.PivotPoses;
 import frc.robot.Constants.RobotMap.CAN;
 import frc.thunder.hardware.ThunderBird;
 import frc.thunder.shuffleboard.LightningShuffleboard;
@@ -23,7 +24,7 @@ public class Pivot extends SubsystemBase {
     private ThunderBird rightMotor;
     private CANcoder angleEncoder;
 
-    private double targetAngle = 0;
+    private double targetAngle = PivotPoses.HOME;
 
     private final PositionVoltage positionPID = new PositionVoltage(0d);
 
@@ -75,16 +76,18 @@ public class Pivot extends SubsystemBase {
     }
 
     public void setAngle(double angle) {
-        targetAngle = MathUtil.clamp(angle, PivotConstants.MIN_ANGLE, PivotConstants.MAX_ANGLE) / 360d;
+        targetAngle = MathUtil.clamp(angle, PivotConstants.MIN_ANGLE, PivotConstants.MAX_ANGLE);
+
+        applyAngle();
     }
 
-    private void applyAngle() {
+    private void applyAngle() {        
         leftMotor.setControl(positionPID.withPosition(targetAngle).withSlot(0));
     }
 
     public double getAngle() {
         // this is also wrong!!
-        return angleEncoder.getPosition().getValueAsDouble() / 409.6;//PivotConstants.ROTOR_TO_ENCODER_RATIO;
+        return angleEncoder.getPosition().getValueAsDouble();
     }
 
     public double getTargetAngle() {

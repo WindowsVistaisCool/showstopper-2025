@@ -17,6 +17,7 @@ import frc.robot.subsystems.Swerve;
 import frc.thunder.LightningContainer;
 import frc.thunder.filter.XboxControllerFilter;
 import frc.robot.Constants.TunerConstants;
+import frc.robot.Constants.PivotConstants.PivotPoses;
 import frc.robot.command.Intake;
 import frc.robot.command.PivotRequest;
 import frc.robot.command.SetFlywheelsRPM;
@@ -82,6 +83,10 @@ public class RobotContainer extends LightningContainer {
         new Trigger(copilot::getLeftBumper).whileTrue(new Intake(indexer, flywheel, true));
         new Trigger(copilot::getRightBumper).whileTrue(new Intake(indexer, flywheel, false));
 
+        new Trigger(copilot::getBButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_3));
+        new Trigger(copilot::getYButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_2));
+        new Trigger(copilot::getXButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_1));
+
         new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
         // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() ->
         // flywheel.setRawPower(1d), flywheel));
@@ -114,13 +119,11 @@ public class RobotContainer extends LightningContainer {
         // copilot.getLeftTriggerAxis()), flywheel));
 
         // raw dutycycle movement
-        pivot.setDefaultCommand(new RunCommand(
-                () -> pivot.setRawPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
+        // pivot.setDefaultCommand(new RunCommand(() -> pivot.setRawPower(copilot.getRightTriggerAxis() - copilot.getLeftTriggerAxis()), pivot));
 
         // angle set based on right trigger (please fix pivot angle math before using!)
-        double ANGLE_MULT = 10; // range: 0-10
-        // pivot.setDefaultCommand(new PivotRequest(pivot, () ->
-        // (copilot.getRightTriggerAxis() * ANGLE_MULT)));
+        // double ANGLE_MULT = 10; // range: 0-10 
+        pivot.setDefaultCommand(new PivotRequest(pivot, () -> (PivotPoses.HOME)));
 
     }
 

@@ -213,10 +213,17 @@ public class Constants {
 
         public static final double ANGLE_TOLERANCE = 0.0208d;
 
-        public static final double ENCODER_OFFSET = 0.2928; // reset parallel to ground
+        public static final double ENCODER_OFFSET = 0.689; // reset parallel to ground
         public static final SensorDirectionValue ENCODER_DIRECTION = SensorDirectionValue.CounterClockwise_Positive;
         public static final double ENCODER_TO_MECHANISM_RATIO = 1d;
         public static final double ROTOR_TO_ENCODER_RATIO = 105.9307;
+
+        public class PivotPoses {
+            public static final double HOME = 0d;
+            public static final double SHOOT_1 = .1d;
+            public static final double SHOOT_2 = .15d;
+            public static final double SHOOT_3 = .2d;
+        }
     }
 
     public class FlywheelConstants {
