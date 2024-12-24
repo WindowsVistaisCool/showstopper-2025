@@ -20,7 +20,7 @@ import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.PivotConstants.PivotPoses;
 import frc.robot.command.Intake;
 import frc.robot.command.PivotRequest;
-import frc.robot.command.SetFlywheelsRPM;
+import frc.robot.command.FlywheelRequest;
 
 public class RobotContainer extends LightningContainer {
 
@@ -87,7 +87,7 @@ public class RobotContainer extends LightningContainer {
         new Trigger(copilot::getYButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_2));
         new Trigger(copilot::getXButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_1));
 
-        new Trigger(copilot::getAButton).whileTrue(new SetFlywheelsRPM(flywheel, () -> 6000d));
+        new Trigger(copilot::getAButton).whileTrue(new FlywheelRequest(flywheel, () -> 6000d));
         // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() ->
         // flywheel.setRawPower(1d), flywheel));
     }

@@ -9,13 +9,13 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Flywheel;
 
-public class SetFlywheelsRPM extends Command {
+public class FlywheelRequest extends Command {
 
     private Flywheel flywheel;
     
     private DoubleSupplier targetRPMSupplier;
 
-    public SetFlywheelsRPM(Flywheel flywheel, DoubleSupplier targetRPM) {
+    public FlywheelRequest(Flywheel flywheel, DoubleSupplier targetRPM) {
         this.flywheel = flywheel;
         this.targetRPMSupplier = targetRPM;
 
