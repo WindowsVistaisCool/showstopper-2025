@@ -214,7 +214,7 @@ public class Constants {
         public static final double ANGLE_TOLERANCE = 0.0208d;
 
         public static final double ENCODER_OFFSET = 0.689; // reset parallel to ground
-        public static final SensorDirectionValue ENCODER_DIRECTION = SensorDirectionValue.CounterClockwise_Positive;
+        public static final SensorDirectionValue ENCODER_DIRECTION = SensorDirectionValue.Clockwise_Positive;
         public static final double ENCODER_TO_MECHANISM_RATIO = 1d;
         public static final double ROTOR_TO_ENCODER_RATIO = 105.9307;
 
@@ -285,7 +285,7 @@ public class Constants {
         public static final boolean INDEXER_INVERT = false;
         public static final double MOTOR_STATOR_CURRENT_LIMIT = 60;
 
-        public static final double DEFAULT_INDEXER_POWER = 0.7;
+        public static final double DEFAULT_INDEXER_POWER = 1;
     }
 
     public class AutonomousConstants {

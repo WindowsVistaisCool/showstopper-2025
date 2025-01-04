@@ -94,6 +94,9 @@ public class Pivot extends SubsystemBase {
         return targetAngle;
     }
 
+    /**
+     * does NOT set raw power 
+     */
     public void setRawPower(double power) {
         power *= 0.4;
         leftMotor.set(power);
@@ -104,5 +107,7 @@ public class Pivot extends SubsystemBase {
         targetAngle = LightningShuffleboard.getDouble("Pivot", "INPUT target angle", targetAngle);
 
         // applyAngle();
+        //
+        // setRawPower(0);
     }
 }

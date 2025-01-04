@@ -11,8 +11,6 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.FieldCentric;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.RobotCentric;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -152,7 +150,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
 
     /**
      * Apply a generic swerve request to the drivetrain
-     * 
      * @param requestSupplier Swerve Request
      * @return request to drive
      */
@@ -163,93 +160,66 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
     /**
      * Apply a percentage Field centric request to the drivetrain
      *
-     * @param request the swerve request used to apply speeds
-     * @param x       the x, percent of max velocity (-1,1)
-     * @param y       the y, percent of max velocity (-1,1)
-     * @param rot     the rotational, percent of max velocity (-1,1)
+     * @param x   the x, percent of max velocity (-1,1)
+     * @param y   the y, percent of max velocity (-1,1)
+     * @param rot the rotational, percent of max velocity (-1,1)
      * @return the request to drive for the drivetrain
      */
-    public Command applyPercentRequestField(FieldCentric request, DoubleSupplier x, DoubleSupplier y,
-            DoubleSupplier rot) {
-        return run(() -> this.setField(request, x.getAsDouble(), y.getAsDouble(), rot.getAsDouble()));
-    }
-
     public Command applyPercentRequestField(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return applyPercentRequestField(driveField, x, y, rot);
-    }
-
-    /**
-     * Applies a fieldcentric request with angular and speed mults
-     * 
-     * @param request   fieldcentric request to apply
-     * @param x         the x, percent of max velocity (-1,1)
-     * @param y         the y, percent of max velocity (-1,1)
-     * @param rot       the rotational, percent of max velocity (-1,1)
-     * @return the request to drive
-     */
-    public Command applyFieldWithLimits(FieldCentric request, DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return applyPercentRequestField(request, () -> x.getAsDouble() * this.getSpeedMult(),
-                () -> y.getAsDouble() * this.getSpeedMult(), () -> rot.getAsDouble() * this.getRotMult());
+        return run(() -> this.setControl(driveField.withVelocityX(x.getAsDouble() * maxSpeed)
+                .withVelocityY(y.getAsDouble() * maxSpeed).withRotationalRate(rot.getAsDouble() * maxAngularRate)
+                .withDriveRequestType(DriveRequestType.Velocity)));
     }
 
     /**
      * Apply a Field centric request to the drivetrain run in periodic
      *
-     * @param request the fieldcentric request to apply
-     * @param x       the x velocity m/s
-     * @param y       the y velocity m/s
-     * @param rot     the rotational velocity in rad/s
+     * @param x   the x velocity m/s
+     * @param y   the y velocity m/s
+     * @param rot the rotational velocity in rad/s
      */
-    public void setField(FieldCentric request, double x, double y, double rot) {
-        this.setControl(request.withVelocityX(x * maxSpeed).withVelocityY(y * maxSpeed)
-                .withRotationalRate(rot * maxAngularRate)
+    public void setField(double x, double y, double rot) {
+        this.setControl(driveField.withVelocityX(x).withVelocityY(y).withRotationalRate(rot)
+                .withDriveRequestType(DriveRequestType.Velocity));
+    }
+
+    /**
+     * Apply a Field centric request to the drivetrain run in periodic, Allows
+     * driving normally and pid control of rotation
+     *
+     * @param x   the x, percent of max velocity (-1,1)
+     * @param y   the y, percent of max velocity (-1,1)
+     * @param rot the rotational, percent of max velocity rad/s
+     */
+    public void setFieldDriver(double x, double y, double rot) {
+        this.setControl(driveField.withVelocityX(x * maxSpeed).withVelocityY(y * maxSpeed).withRotationalRate(rot)
                 .withDriveRequestType(DriveRequestType.Velocity));
     }
 
     /**
      * Apply a percentage Robot centric request to the drivetrain
      *
-     * @param request the robot centric swerverequest
-     * @param x       the x, percent of max velocity (-1,1)
-     * @param y       the y, percent of max velocity (-1,1)
-     * @param rot     the rotational, percent of max velocity (-1,1)
+     * @param x   the x, percent of max velocity (-1,1)
+     * @param y   the y, percent of max velocity (-1,1)
+     * @param rot the rotational, percent of max velocity (-1,1)
      * @return the request to drive for the drivetrain
      */
-    public Command applyPercentRequestRobot(RobotCentric request, DoubleSupplier x, DoubleSupplier y,
-            DoubleSupplier rot) {
-        return run(() -> this.setRobot(request, x.getAsDouble(), y.getAsDouble(), rot.getAsDouble()));
-    }
-
     public Command applyPercentRequestRobot(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return applyPercentRequestRobot(driveRobot, x, y, rot);
-    }
-
-    /**
-     * Applies a robotcentric request with angular and speed mults
-     * 
-     * @param request   robotcentric request to apply
-     * @param x         the x, percent of max velocity (-1,1)
-     * @param y         the y, percent of max velocity (-1,1)
-     * @param rot       the rotational, percent of max velocity (-1,1)
-     * @return the request to drive
-     */
-    public Command applyRobotWithLimits(RobotCentric request, DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return applyPercentRequestRobot(request, () -> x.getAsDouble() * this.getSpeedMult(),
-                () -> y.getAsDouble() * this.getSpeedMult(), () -> rot.getAsDouble() * this.getRotMult());
+        return run(() -> this.setControl(driveRobot.withVelocityX(x.getAsDouble() * maxSpeed)
+                .withVelocityY(y.getAsDouble() * maxSpeed).withRotationalRate(rot.getAsDouble() * maxAngularRate)
+                .withDriveRequestType(DriveRequestType.Velocity)));
     }
 
     /**
      * Apply a Robot centric request to the drivetrain run in periodic
      *
-     * @param request the robot centric swerverequest
-     * @param x       the x velocity m/s
-     * @param y       the y velocity m/s
-     * @param rot     the rotational velocity in rad/s
+     * @param x   the x velocity m/s
+     * @param y   the y velocity m/s
+     * @param rot the rotational velocity in rad/s
      */
-    public void setRobot(RobotCentric request, double x, double y, double rot) {
-        this.setControl(
-                request.withVelocityX(x * maxSpeed).withVelocityY(y * maxSpeed).withRotationalRate(rot * maxAngularRate)
-                        .withDriveRequestType(DriveRequestType.Velocity));
+    public void setRobot(double x, double y, double rot) {
+        this.setControl(driveRobot.withVelocityX(x).withVelocityY(y).withRotationalRate(rot)
+                .withDriveRequestType(DriveRequestType.Velocity));
     }
 
     /**
@@ -259,11 +229,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
         this.setControl(brake);
     }
 
-    /**
-     * Robot park as a command
-     */
     public Command setBrake() {
-        return run(this::brake);
+        return run(() -> this.setControl(brake));
     }
 
     /**
@@ -273,8 +240,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
      */
     public Command resetForward() {
         // return runOnce(this::seedFieldCentric).andThen(
-        // runOnce(() -> this.setOperatorPerspectiveForward(new
-        // Rotation2d(Math.toRadians(0)))));
+        //         runOnce(() -> this.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)))));
         return null;
     }
 

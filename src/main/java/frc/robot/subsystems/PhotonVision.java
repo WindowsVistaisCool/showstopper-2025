@@ -97,11 +97,13 @@ public class PhotonVision extends SubsystemBase {
         }
 
         if (result != null && poseEstimator != null) {
-            poseEstimator.update(result).ifPresent((m_estimatedRobotPose) -> setEstimatedPose(m_estimatedRobotPose));
+            // poseEstimator.update(result).ifPresent((m_estimatedRobotPose) -> setEstimatedPose(m_estimatedRobotPose));
 
             field.setRobotPose(estimatedRobotPose.toPose2d());
 
             LightningShuffleboard.set("Vision", "Field", field);
+
+
 
         } else {
             System.out.println("[VISION] Pose Estimator Failed to update");
