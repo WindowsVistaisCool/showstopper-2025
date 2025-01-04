@@ -7,7 +7,6 @@ package frc.robot;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Flywheel;
 import frc.robot.subsystems.Indexer;
@@ -17,20 +16,31 @@ import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.Swerve;
 import frc.thunder.LightningContainer;
 import frc.thunder.filter.XboxControllerFilter;
-import frc.thunder.vision.Limelight;
+import frc.robot.Constants.FlywheelConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.PivotConstants.PivotPoses;
+import frc.robot.command.AutoShoot;
 import frc.robot.command.Intake;
 import frc.robot.command.PivotRequest;
+import frc.robot.command.FlywheelRequest;
+import frc.thunder.shuffleboard.LightningShuffleboard;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 
 public class RobotContainer extends LightningContainer {
 
     private XboxControllerFilter driver;
     private XboxControllerFilter copilot;
 
-    public static final boolean DRIVETRAIN_DISABLED = true;
+    public static final boolean DRIVETRAIN_DISABLED = false;
     //0 for LL, 1 for PV, 2 for disabled
     public static final int VISION_DISABLED = 0;
+
+    private SendableChooser<Command> autoChooser;
 
     private LL limelight;
     private Swerve drivetrain;
@@ -55,6 +65,8 @@ public class RobotContainer extends LightningContainer {
             this.driveFieldCentric = new SwerveRequest.FieldCentric();
             this.driveRobotCentric = new SwerveRequest.RobotCentric();
         }
+
+
         this.pivot = new Pivot();
         this.indexer = new Indexer();
         this.flywheel = new Flywheel();
@@ -111,7 +123,7 @@ public class RobotContainer extends LightningContainer {
         new Trigger(copilot::getYButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_2));
         new Trigger(copilot::getXButton).whileTrue(new PivotRequest(pivot, () -> PivotPoses.SHOOT_1));
 
-        // new Trigger(copilot::getAButton).whileTrue(new FlywheelRequest(flywheel, () -> 6000d));
+        new Trigger(copilot::getAButton).whileTrue(new FlywheelRequest(flywheel, () -> FlywheelConstants.SHOOT_SPEED));
         // new Trigger(copilot::getAButton).whileTrue(new RunCommand(() ->
         // flywheel.setRawPower(1d), flywheel));
         //
@@ -119,11 +131,11 @@ public class RobotContainer extends LightningContainer {
 
     @Override
     protected void configureDefaultCommands() {
-        // drivetrain.setDefaultCommand(
-        // drivetrain.applyPercentRequestField(() -> -(driver.getLeftY() *
-        // drivetrain.getSpeedMult()),
-        // () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
-        // () -> -(driver.getRightX() * drivetrain.getRotMult())));
+        drivetrain.setDefaultCommand(
+        drivetrain.applyPercentRequestField(() -> -(driver.getLeftY() *
+        drivetrain.getSpeedMult()),
+        () -> -(driver.getLeftX() * drivetrain.getSpeedMult()),
+        () -> -(driver.getRightX() * drivetrain.getRotMult())));
 
         // if (!DRIVETRAIN_DISABLED) {
         //     drivetrain.setDefaultCommand(drivetrain.applyRequest(
@@ -158,6 +170,14 @@ public class RobotContainer extends LightningContainer {
 
     @Override
     protected void initializeNamedCommands() {
+
+        NamedCommands.registerCommand("Shoot", new AutoShoot(pivot, flywheel, indexer, PivotPoses.SHOOT_2, FlywheelConstants.SHOOT_SPEED));
+        NamedCommands.registerCommand("ReadyShoot", new ParallelDeadlineGroup(new PivotRequest(pivot, () -> PivotPoses.SHOOT_2).until(pivot::onTarget), new FlywheelRequest(flywheel, () -> FlywheelConstants.SHOOT_SPEED)));
+        NamedCommands.registerCommand("IndexUp", new Intake(indexer, flywheel, true));
+
+
+	autoChooser = AutoBuilder.buildAutoChooser();
+	LightningShuffleboard.set("Auton", "Auto Chooser", autoChooser);
     }
 
     @Override
@@ -182,7 +202,7 @@ public class RobotContainer extends LightningContainer {
 
     @Override
     protected Command getAutonomousCommand() {
-        return null;
+        return autoChooser.getSelected();
     }
 
     public Swerve getDrivetrain() {

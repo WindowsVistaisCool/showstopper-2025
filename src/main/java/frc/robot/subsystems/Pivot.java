@@ -85,8 +85,11 @@ public class Pivot extends SubsystemBase {
         leftMotor.setControl(positionPID.withPosition(targetAngle).withSlot(0));
     }
 
+    public boolean onTarget() {
+        return Math.abs(getAngle() - getTargetAngle()) < PivotConstants.ANGLE_TOLERANCE;
+    }
+
     public double getAngle() {
-        // this is also wrong!!
         return angleEncoder.getPosition().getValueAsDouble();
     }
 

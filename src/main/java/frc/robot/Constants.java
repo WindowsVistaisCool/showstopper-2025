@@ -15,6 +15,11 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.Swerve;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public class Constants {
     public class TunerConstants {
@@ -238,6 +243,8 @@ public class Constants {
         public static final double MOTOR_KS = 0.0;
         public static final double MOTOR_KV = 0.105;
         public static final double MOTOR_KA = 2.9;
+
+        public static final double SHOOT_SPEED = 6000d;
     }
 
     public class RobotMap {
@@ -288,8 +295,20 @@ public class Constants {
         public static final double DEFAULT_INDEXER_POWER = 1;
     }
 
-    public class AutonomousConstants {
+    public static class AutonomousConstants {
+        public static final PIDConstants TRANSLATION_PID = new PIDConstants(10, 0, 0);
+        public static final PIDConstants ROTATION_PID = new PIDConstants(5, 0, 0);
 
+        public static final double MAX_MODULE_VELOCITY = Units.feetToMeters(16.5); // f/s to m/s
+        public static final double DRIVE_BASE_RADIUS = Units.inchesToMeters(10.825);
+
+        public static final double CONTROL_LOOP_PERIOD = 0.02;
+
+        public static final ReplanningConfig REPLANNING_CONFIG = new ReplanningConfig(true, false); // Expirement with dynamic replaning in offseason
+        public static final PathConstraints PATHFINDING_CONSTRAINTS = new PathConstraints(2.0, 1.0, 3.0, 1.5);
+        public static final PathConstraints PATH_CONSTRAINTS = new PathConstraints(2.0, 1, 1.0, 0.5);
+
+        public static final Pose2d AMP_LOCATION_RED = new Pose2d(new Translation2d(14.4, 7.62), new Rotation2d(90));
     }
 
     public class PoseConstants {

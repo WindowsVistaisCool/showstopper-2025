@@ -30,6 +30,8 @@ public class PhotonVision extends SubsystemBase {
 
     private PhotonPipelineResult result;
 
+    private Pose2d lastEstimatedRobotPose = new Pose2d();
+
     private Pose4d estimatedRobotPose = new Pose4d();
     private Field2d field = new Field2d();
 
@@ -88,21 +90,23 @@ public class PhotonVision extends SubsystemBase {
 
     @Override
     public void periodic() {
-        try {
+        // try {
             result = camera.getLatestResult();
-            LightningShuffleboard.setBool("Vision", "HasResult", true);
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("[VISION] Failed to gather camera result");
-            LightningShuffleboard.setBool("Vision", "HasResult", false);
-        }
+        // } catch (IndexOutOfBoundsException e) {
+        //     System.out.println("[VISION] Failed to gather camera result");
+        // }
 
-        if (result != null && poseEstimator != null) {
-            // poseEstimator.update(result).ifPresent((m_estimatedRobotPose) -> setEstimatedPose(m_estimatedRobotPose));
 
-            field.setRobotPose(estimatedRobotPose.toPose2d());
+        LightningShuffleboard.setBool("Vision", "HasResult", result.hasTargets());
+            LightningShuffleboard.set("Vision", "timestamp", result.getTimestampSeconds());
+
+        if (result.hasTargets()) {
+            getEstimatedGlobalPose(lastEstimatedRobotPose).ifPresentOrElse((m_estimatedRobotPose) -> setEstimatedPose(m_estimatedRobotPose), () -> {System.out.println("[VISION] god freaking dang it");});
+        
+            lastEstimatedRobotPose = estimatedRobotPose.toPose2d();
+            field.setRobotPose(lastEstimatedRobotPose);
 
             LightningShuffleboard.set("Vision", "Field", field);
-
 
 
         } else {

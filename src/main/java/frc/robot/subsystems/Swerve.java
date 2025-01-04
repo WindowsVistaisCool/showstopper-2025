@@ -4,8 +4,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
-// import com.pathplanner.lib.auto.AutoBuilder;
-// import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.thunder.util.Pose4d;
+import frc.robot.Constants.AutonomousConstants;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
@@ -32,9 +34,9 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
     /* SwerveRequests */
     private SwerveRequest.FieldCentric driveField;
     private SwerveRequest.RobotCentric driveRobot;
-    // private SwerveRequest.ApplyChassisSpeeds autoRequest = new
+    private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
     private SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-
+    
     /* Drivetrain Constants */
     private double maxSpeed = DrivetrainConstants.MaxSpeed;
     private double maxAngularRate = DrivetrainConstants.MaxAngularRate * DrivetrainConstants.ROT_MULT;
@@ -63,6 +65,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
         driveField = new SwerveRequest.FieldCentric();
         driveRobot = new SwerveRequest.RobotCentric();
 
+        configurePathPlanner();
+
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -70,6 +74,11 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
 
     public Swerve(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
+        driveField = new SwerveRequest.FieldCentric();
+        driveRobot = new SwerveRequest.RobotCentric();
+
+        configurePathPlanner();
+
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -80,7 +89,26 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
     }
 
     private void configurePathPlanner() {
-        // TODO: implement :)
+        
+    AutoBuilder.configureHolonomic(() -> getPose(), // Supplier of current robot pose
+            this::seedFieldRelative, // Consumer for seeding pose against auto
+            this::getCurrentRobotChassisSpeeds, (speeds) -> this.setControl(autoRequest.withSpeeds(speeds).withDriveRequestType(DriveRequestType.Velocity)), // Consumer of ChassisSpeeds to drive the robot
+            new HolonomicPathFollowerConfig(AutonomousConstants.TRANSLATION_PID, AutonomousConstants.ROTATION_PID, AutonomousConstants.MAX_MODULE_VELOCITY, AutonomousConstants.DRIVE_BASE_RADIUS, AutonomousConstants.REPLANNING_CONFIG, AutonomousConstants.CONTROL_LOOP_PERIOD), () -> {
+                // Boolean supplier that controls when the path will be mirrored for the red
+                // alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                var alliance = DriverStation.getAlliance();
+                if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
+            }, this); // Subsystem for requirements
+    }
+
+    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+        return m_kinematics.toChassisSpeeds(getState().ModuleStates);
     }
 
     public Pose2d getPose() {
@@ -239,9 +267,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem {
      * @return the SequentialCommandGroup to reset the field relative heading
      */
     public Command resetForward() {
-        // return runOnce(this::seedFieldCentric).andThen(
-        //         runOnce(() -> this.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)))));
-        return null;
+        return runOnce(this::seedFieldRelative).andThen(
+                runOnce(() -> this.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)))));
     }
 
     @Override
